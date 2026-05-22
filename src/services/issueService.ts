@@ -1,6 +1,11 @@
 import pool from "../config/db";
-import type { IssueStatus, IssueType } from "../types";
-import { BadRequestError, NotFoundError } from "../utils/errors";
+import type { IssueStatus, IssueType, JwtPayload } from "../types";
+import {
+  BadRequestError,
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+} from "../utils/errors";
 import {
   validateEnum,
   validateOptionalEnum,
@@ -10,8 +15,6 @@ import {
 const ISSUE_TYPES = ["bug", "feature_request"] as const;
 const ISSUE_STATUSES = ["open", "in_progress", "resolved"] as const;
 const SORT_OPTIONS = ["newest", "oldest"] as const;
-
-type SortOption = (typeof SORT_OPTIONS)[number];
 
 interface CreateIssueInput {
   title: string;
@@ -114,19 +117,7 @@ export async function getAllIssues(query: IssueQueryParams) {
 }
 
 export async function getIssueById(issueId: number) {
-  const result = await pool.query(
-    `SELECT id, title, description, type, status, reporter_id, created_at, updated_at
-     FROM issues
-     WHERE id = $1`,
-    [issueId]
-  );
-
-  const issue = result.rows[0];
-
-  if (!issue) {
-    throw new NotFoundError("Issue not found");
-  }
-
+  const issue = await findIssueRowById(issueId);
   const [formattedIssue] = await attachReporters([issue]);
   return formattedIssue;
 }
@@ -163,4 +154,114 @@ export async function createIssue(body: unknown, reporterId: number) {
   );
 
   return result.rows[0];
+}
+
+async function findIssueRowById(issueId: number): Promise<IssueRow> {
+  const result = await pool.query(
+    `SELECT id, title, description, type, status, reporter_id, created_at, updated_at
+     FROM issues
+     WHERE id = $1`,
+    [issueId]
+  );
+
+  const issue = result.rows[0];
+
+  if (!issue) {
+    throw new NotFoundError("Issue not found");
+  }
+
+  return issue;
+}
+
+export async function updateIssue(
+  issueId: number,
+  body: unknown,
+  user: JwtPayload
+) {
+  if (!body || typeof body !== "object") {
+    throw new BadRequestError("Invalid request body");
+  }
+
+  const issue = await findIssueRowById(issueId);
+  const payload = body as Record<string, unknown>;
+
+  if (user.role === "contributor") {
+    if (issue.reporter_id !== user.id) {
+      throw new ForbiddenError("You can only update your own issues");
+    }
+
+    if (issue.status !== "open") {
+      throw new ConflictError("Only open issues can be updated by contributors");
+    }
+
+    if (payload.status !== undefined) {
+      throw new ForbiddenError("Only maintainers can update issue status");
+    }
+  }
+
+  const updates: string[] = [];
+  const values: unknown[] = [];
+
+  if (payload.title !== undefined) {
+    values.push(
+      validateRequiredString(payload.title, "Title", { maxLength: 150 })
+    );
+    updates.push(`title = $${values.length}`);
+  }
+
+  if (payload.description !== undefined) {
+    values.push(
+      validateRequiredString(payload.description, "Description", {
+        minLength: 20,
+      })
+    );
+    updates.push(`description = $${values.length}`);
+  }
+
+  if (payload.type !== undefined) {
+    values.push(validateEnum(payload.type, ISSUE_TYPES, "Type"));
+    updates.push(`type = $${values.length}`);
+  }
+
+  if (payload.status !== undefined) {
+    if (user.role !== "maintainer") {
+      throw new ForbiddenError("Only maintainers can update issue status");
+    }
+
+    values.push(validateEnum(payload.status, ISSUE_STATUSES, "Status"));
+    updates.push(`status = $${values.length}`);
+  }
+
+  if (updates.length === 0) {
+    throw new BadRequestError("At least one field must be provided to update");
+  }
+
+  values.push(issueId);
+
+  const result = await pool.query(
+    `UPDATE issues
+     SET ${updates.join(", ")}
+     WHERE id = $${values.length}
+     RETURNING id, title, description, type, status, reporter_id, created_at, updated_at`,
+    values
+  );
+
+  return result.rows[0];
+}
+
+export async function deleteIssue(issueId: number, user: JwtPayload) {
+  if (user.role !== "maintainer") {
+    throw new ForbiddenError("Only maintainers can delete issues");
+  }
+
+  const result = await pool.query(
+    `DELETE FROM issues
+     WHERE id = $1
+     RETURNING id`,
+    [issueId]
+  );
+
+  if (result.rows.length === 0) {
+    throw new NotFoundError("Issue not found");
+  }
 }
