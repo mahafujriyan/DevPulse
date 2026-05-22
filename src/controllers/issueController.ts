@@ -1,7 +1,11 @@
 import type { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import { createIssue } from "../services/issueService";
-import { UnauthorizedError } from "../utils/errors";
+import {
+  createIssue,
+  getAllIssues,
+  getIssueById,
+} from "../services/issueService";
+import { BadRequestError, UnauthorizedError } from "../utils/errors";
 import { sendSuccess } from "../utils/response";
 
 export async function createIssueHandler(req: Request, res: Response): Promise<void> {
@@ -16,4 +20,22 @@ export async function createIssueHandler(req: Request, res: Response): Promise<v
     message: "Issue created successfully",
     data: issue,
   });
+}
+
+export async function getAllIssuesHandler(req: Request, res: Response): Promise<void> {
+  const issues = await getAllIssues(req.query as Record<string, string>);
+
+  sendSuccess(res, { data: issues });
+}
+
+export async function getIssueByIdHandler(req: Request, res: Response): Promise<void> {
+  const issueId = Number(req.params.id);
+
+  if (!Number.isInteger(issueId) || issueId <= 0) {
+    throw new BadRequestError("Invalid issue id");
+  }
+
+  const issue = await getIssueById(issueId);
+
+  sendSuccess(res, { data: issue });
 }
