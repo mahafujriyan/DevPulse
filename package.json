@@ -4,11 +4,12 @@
   "description": "Internal tech issue and feature tracker API for software teams",
   "main": "dist/server.js",
   "engines": {
-    "node": ">=24.0.0"
+    "node": ">=20.0.0"
   },
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-    "build": "tsc",
+    "build": "node ./node_modules/typescript/lib/tsc.js --project tsconfig.json --pretty false && node -e \"console.log('Build completed successfully -> dist/')\"",
+    "vercel-build": "node ./node_modules/typescript/lib/tsc.js --project tsconfig.json --pretty false",
     "start": "node dist/server.js",
     "db:migrate": "ts-node --transpile-only src/database/migrate.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -24,7 +25,8 @@
     "express": "^5.2.1",
     "http-status-codes": "^2.3.0",
     "jsonwebtoken": "^9.0.3",
-    "pg": "^8.21.0"
+    "pg": "^8.21.0",
+    "typescript": "^6.0.3"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
@@ -33,7 +35,6 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.9.1",
     "@types/pg": "^8.20.0",
-    "ts-node-dev": "^2.0.0",
-    "typescript": "^6.0.3"
+    "ts-node-dev": "^2.0.0"
   }
 }
