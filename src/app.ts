@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import pool from "./config/db";
+import authRoutes from "./routes/authRoutes";
 import { asyncHandler } from "./middleware/asyncHandler";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler";
 import { sendSuccess, sendError } from "./utils/response";
@@ -32,6 +33,8 @@ app.get(
     }
   })
 );
+
+app.use("/api/auth", authRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
