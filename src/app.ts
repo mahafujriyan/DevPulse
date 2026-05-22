@@ -14,7 +14,15 @@ app.use(cors());
 app.use(express.json());
 
 app.get("/", (_req, res) => {
-  res.send("DevPulse Server Running");
+  res.json({
+    success: true,
+    message: "DevPulse API",
+    data: {
+      health: "/api/health",
+      auth: "/api/auth",
+      issues: "/api/issues",
+    },
+  });
 });
 
 app.get(
