@@ -21,6 +21,7 @@ app.get("/", (_req, res) => {
       health: "/api/health",
       auth: "/api/auth",
       issues: "/api/issues",
+      issuesInfo: "/api/issues/info",
     },
   });
 });

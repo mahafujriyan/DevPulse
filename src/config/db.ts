@@ -4,6 +4,9 @@ import { env } from "./env";
 const pool = new Pool({
   connectionString: env.databaseUrl,
   ssl: env.isSupabase ? { rejectUnauthorized: false } : undefined,
+  max: process.env.VERCEL ? 1 : 10,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000,
 });
 
 pool.on("error", (err: Error) => {
