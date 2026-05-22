@@ -1,7 +1,20 @@
 import app from "./app";
+import { env } from "./config/env";
+import { testDbConnection } from "./config/db";
 
-const PORT = process.env.PORT || 5000;
+async function startServer(): Promise<void> {
+  try {
+    await testDbConnection();
+    console.log("PostgreSQL connected successfully");
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    console.error("Failed to connect to PostgreSQL:", message);
+    process.exit(1);
+  }
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+  app.listen(env.port, () => {
+    console.log(`Server running on port ${env.port}`);
+  });
+}
+
+startServer();
