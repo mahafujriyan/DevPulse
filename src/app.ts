@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import pool from "./config/db";
+import { query } from "./config/db";
 import authRoutes from "./routes/authRoutes";
 import issueRoutes from "./routes/issueRoutes";
 import { asyncHandler } from "./middleware/asyncHandler";
@@ -30,7 +30,7 @@ app.get(
   "/api/health",
   asyncHandler(async (_req, res) => {
     try {
-      await pool.query("SELECT 1");
+      await query("SELECT 1", [], 5000);
       sendSuccess(res, {
         message: "DevPulse API is healthy",
         data: { database: "connected" },
