@@ -192,6 +192,23 @@ Authorization: Bearer <token>
 2. Login first, copy the `token`, then add it as an `Authorization` header on protected routes.
 3. Contributors can only PATCH their own issues while status is `open`.
 
+## Live Deployment (Vercel)
+
+| Link | URL |
+|------|-----|
+| Live API | `https://dev-pulse-ten-beta.vercel.app` |
+| Health | `https://dev-pulse-ten-beta.vercel.app/api/health` |
+| GitHub | `https://github.com/mahafujriyan/DevPulse` |
+
+### Deploy steps
+
+1. Push code to GitHub
+2. Import repo on [vercel.com](https://vercel.com)
+3. Add environment variables (see `.env.example`)
+4. Redeploy → test `/api/health`
+
+Full submission checklist: see [SUBMISSION.md](./SUBMISSION.md)
+
 ## License
 
 ISC

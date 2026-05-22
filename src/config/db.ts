@@ -1,11 +1,9 @@
-import { Pool, type QueryResult, type QueryResultRow } from "pg";
+import { Pool, type QueryResult } from "pg";
 import { env } from "./env";
 
-const isServerless = Boolean(process.env.VERCEL);
+let pool: Pool | null = null;
 
-function buildConnectionString(): string {
-  const url = env.databaseUrl;
-
+function buildConnectionString(url: string): string {
   if (url.includes("connect_timeout")) {
     return url;
   }
@@ -14,25 +12,33 @@ function buildConnectionString(): string {
   return `${url}${separator}connect_timeout=5`;
 }
 
-const pool = new Pool({
-  connectionString: buildConnectionString(),
-  ssl: env.isSupabase ? { rejectUnauthorized: false } : undefined,
-  max: isServerless ? 1 : 10,
-  idleTimeoutMillis: isServerless ? 1000 : 30000,
-  connectionTimeoutMillis: 5000,
-  allowExitOnIdle: isServerless,
-});
+function getPool(): Pool {
+  if (pool) {
+    return pool;
+  }
 
-pool.on("error", (err: Error) => {
-  console.error("Unexpected PostgreSQL pool error:", err.message);
-});
+  pool = new Pool({
+    connectionString: buildConnectionString(env.databaseUrl),
+    ssl: env.isSupabase ? { rejectUnauthorized: false } : undefined,
+    max: env.isVercel ? 1 : 10,
+    idleTimeoutMillis: env.isVercel ? 1000 : 30000,
+    connectionTimeoutMillis: 5000,
+    allowExitOnIdle: env.isVercel,
+  });
 
-export async function query<R extends QueryResultRow = QueryResultRow>(
+  pool.on("error", (err: Error) => {
+    console.error("Unexpected PostgreSQL pool error:", err.message);
+  });
+
+  return pool;
+}
+
+export async function dbQuery(
   text: string,
   params: unknown[] = [],
   timeoutMs = 8000
-): Promise<QueryResult<R>> {
-  const queryPromise = pool.query<R>(text, params);
+): Promise<QueryResult> {
+  const queryPromise = getPool().query(text, params);
   const timeoutPromise = new Promise<never>((_, reject) => {
     setTimeout(() => reject(new Error("Database query timed out")), timeoutMs);
   });
@@ -41,7 +47,7 @@ export async function query<R extends QueryResultRow = QueryResultRow>(
 }
 
 export async function testDbConnection(): Promise<void> {
-  await query("SELECT 1");
+  await dbQuery("SELECT 1", [], 5000);
 }
 
-export default pool;
+export default getPool;

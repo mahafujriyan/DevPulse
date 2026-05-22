@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import pool from "../config/db";
+import { dbQuery } from "../config/db";
 import { env } from "../config/env";
 import type { JwtPayload, UserRole } from "../types";
 import { BadRequestError, ConflictError, UnauthorizedError } from "../utils/errors";
@@ -38,7 +38,7 @@ export async function registerUser(body: unknown) {
   const hashedPassword = await bcrypt.hash(input.password, BCRYPT_ROUNDS);
 
   try {
-    const result = await pool.query(
+    const result = await dbQuery(
       `INSERT INTO users (name, email, password, role)
        VALUES ($1, $2, $3, $4)
        RETURNING id, name, email, role, created_at, updated_at`,
@@ -77,7 +77,7 @@ export async function loginUser(body: unknown) {
     password: validateRequiredString(payload.password, "Password"),
   };
 
-  const result = await pool.query(
+  const result = await dbQuery(
     `SELECT id, name, email, password, role, created_at, updated_at
      FROM users
      WHERE email = $1`,

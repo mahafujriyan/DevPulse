@@ -1,10 +1,11 @@
 import fs from "fs";
 import path from "path";
-import pool from "../config/db";
+import getPool from "../config/db";
 
 async function migrate(): Promise<void> {
   const schemaPath = path.join(__dirname, "../../database/schema.sql");
   const sql = fs.readFileSync(schemaPath, "utf-8");
+  const pool = getPool();
 
   console.log("Running database migration...");
   await pool.query(sql);
@@ -18,5 +19,5 @@ migrate()
     process.exit(1);
   })
   .finally(async () => {
-    await pool.end();
+    await getPool().end();
   });

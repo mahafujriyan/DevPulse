@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import { query } from "./config/db";
+import { dbQuery } from "./config/db";
 import authRoutes from "./routes/authRoutes";
 import issueRoutes from "./routes/issueRoutes";
 import { asyncHandler } from "./middleware/asyncHandler";
@@ -10,6 +10,7 @@ import { StatusCodes } from "http-status-codes";
 
 const app = express();
 
+app.set("trust proxy", 1);
 app.use(cors());
 app.use(express.json());
 
@@ -30,7 +31,7 @@ app.get(
   "/api/health",
   asyncHandler(async (_req, res) => {
     try {
-      await query("SELECT 1", [], 5000);
+      await dbQuery("SELECT 1", [], 5000);
       sendSuccess(res, {
         message: "DevPulse API is healthy",
         data: { database: "connected" },

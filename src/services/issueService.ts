@@ -1,4 +1,4 @@
-import pool from "../config/db";
+import { dbQuery } from "../config/db";
 import type { IssueStatus, IssueType, JwtPayload } from "../types";
 import {
   BadRequestError,
@@ -53,7 +53,7 @@ async function attachReporters(issues: IssueRow[]) {
   const reporterIds = [...new Set(issues.map((issue) => issue.reporter_id))];
   const placeholders = reporterIds.map((_, index) => `$${index + 1}`).join(", ");
 
-  const usersResult = await pool.query(
+  const usersResult = await dbQuery(
     `SELECT id, name, role
      FROM users
      WHERE id IN (${placeholders})`,
@@ -61,7 +61,10 @@ async function attachReporters(issues: IssueRow[]) {
   );
 
   const reporterMap = new Map<number, ReporterSummary>(
-    usersResult.rows.map((user) => [user.id, user])
+    usersResult.rows.map((user) => [
+      user.id as number,
+      user as ReporterSummary,
+    ])
   );
 
   return issues.map((issue) => {
@@ -105,7 +108,7 @@ export async function getAllIssues(query: IssueQueryParams) {
   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
   const orderDirection = sort === "oldest" ? "ASC" : "DESC";
 
-  const result = await pool.query(
+  const result = await dbQuery(
     `SELECT id, title, description, type, status, reporter_id, created_at, updated_at
      FROM issues
      ${whereClause}
@@ -113,7 +116,7 @@ export async function getAllIssues(query: IssueQueryParams) {
     values
   );
 
-  return attachReporters(result.rows);
+  return attachReporters(result.rows as IssueRow[]);
 }
 
 export async function getIssueById(issueId: number) {
@@ -137,7 +140,7 @@ export async function createIssue(body: unknown, reporterId: number) {
     type: validateEnum(payload.type, ISSUE_TYPES, "Type"),
   };
 
-  const userCheck = await pool.query(
+  const userCheck = await dbQuery(
     `SELECT id FROM users WHERE id = $1`,
     [reporterId]
   );
@@ -146,7 +149,7 @@ export async function createIssue(body: unknown, reporterId: number) {
     throw new NotFoundError("Reporter user not found");
   }
 
-  const result = await pool.query(
+  const result = await dbQuery(
     `INSERT INTO issues (title, description, type, reporter_id)
      VALUES ($1, $2, $3, $4)
      RETURNING id, title, description, type, status, reporter_id, created_at, updated_at`,
@@ -157,7 +160,7 @@ export async function createIssue(body: unknown, reporterId: number) {
 }
 
 async function findIssueRowById(issueId: number): Promise<IssueRow> {
-  const result = await pool.query(
+  const result = await dbQuery(
     `SELECT id, title, description, type, status, reporter_id, created_at, updated_at
      FROM issues
      WHERE id = $1`,
@@ -170,7 +173,7 @@ async function findIssueRowById(issueId: number): Promise<IssueRow> {
     throw new NotFoundError("Issue not found");
   }
 
-  return issue;
+  return issue as IssueRow;
 }
 
 export async function updateIssue(
@@ -238,7 +241,7 @@ export async function updateIssue(
 
   values.push(issueId);
 
-  const result = await pool.query(
+  const result = await dbQuery(
     `UPDATE issues
      SET ${updates.join(", ")}
      WHERE id = $${values.length}
@@ -254,7 +257,7 @@ export async function deleteIssue(issueId: number, user: JwtPayload) {
     throw new ForbiddenError("Only maintainers can delete issues");
   }
 
-  const result = await pool.query(
+  const result = await dbQuery(
     `DELETE FROM issues
      WHERE id = $1
      RETURNING id`,
