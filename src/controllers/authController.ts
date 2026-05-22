@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import { registerUser } from "../services/authService";
+import { loginUser, registerUser } from "../services/authService";
 import { sendSuccess } from "../utils/response";
 
 export async function signup(req: Request, res: Response): Promise<void> {
@@ -10,5 +10,15 @@ export async function signup(req: Request, res: Response): Promise<void> {
     statusCode: StatusCodes.CREATED,
     message: "User registered successfully",
     data: user,
+  });
+}
+
+export async function login(req: Request, res: Response): Promise<void> {
+  const data = await loginUser(req.body);
+
+  sendSuccess(res, {
+    statusCode: StatusCodes.OK,
+    message: "Login successful",
+    data,
   });
 }

@@ -1,11 +1,14 @@
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 import pool from "../config/db";
-import type { UserRole } from "../types";
-import { BadRequestError, ConflictError } from "../utils/errors";
+import { env } from "../config/env";
+import type { JwtPayload, UserRole } from "../types";
+import { BadRequestError, ConflictError, UnauthorizedError } from "../utils/errors";
 import {
   validateEmail,
   validateEnum,
   validateRequiredString,
+  stripPassword,
 } from "../utils/validation";
 
 const BCRYPT_ROUNDS = 10;
@@ -55,4 +58,56 @@ export async function registerUser(body: unknown) {
 
     throw error;
   }
+}
+
+interface LoginInput {
+  email: string;
+  password: string;
+}
+
+export async function loginUser(body: unknown) {
+  if (!body || typeof body !== "object") {
+    throw new BadRequestError("Invalid request body");
+  }
+
+  const payload = body as Record<string, unknown>;
+
+  const input: LoginInput = {
+    email: validateEmail(payload.email),
+    password: validateRequiredString(payload.password, "Password"),
+  };
+
+  const result = await pool.query(
+    `SELECT id, name, email, password, role, created_at, updated_at
+     FROM users
+     WHERE email = $1`,
+    [input.email]
+  );
+
+  const user = result.rows[0];
+
+  if (!user) {
+    throw new UnauthorizedError("Invalid email or password");
+  }
+
+  const passwordMatch = await bcrypt.compare(input.password, user.password);
+
+  if (!passwordMatch) {
+    throw new UnauthorizedError("Invalid email or password");
+  }
+
+  const tokenPayload: JwtPayload = {
+    id: user.id,
+    name: user.name,
+    role: user.role as UserRole,
+  };
+
+  const token = jwt.sign(tokenPayload, env.jwtSecret, {
+    expiresIn: env.jwtExpiresIn as jwt.SignOptions["expiresIn"],
+  });
+
+  return {
+    token,
+    user: stripPassword(user),
+  };
 }
