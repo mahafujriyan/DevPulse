@@ -5,10 +5,10 @@ import {
   getAllIssuesHandler,
   getIssueByIdHandler,
   updateIssueHandler,
-} from "../controllers/issueController";
-import { asyncHandler } from "../middleware/asyncHandler";
-import { authenticate } from "../middleware/authMiddleware";
-import { sendSuccess } from "../utils/response";
+} from "./issues.controller";
+import { asyncHandler } from "../../middleware/asyncHandler";
+import { authenticate } from "../../middleware/authMiddleware";
+import { sendSuccess } from "../../utils/response";
 
 const router = Router();
 

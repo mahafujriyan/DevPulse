@@ -6,9 +6,9 @@ import {
   getAllIssues,
   getIssueById,
   updateIssue,
-} from "../services/issueService";
-import { BadRequestError, UnauthorizedError } from "../utils/errors";
-import { sendSuccess } from "../utils/response";
+} from "./issues.service";
+import { BadRequestError, UnauthorizedError } from "../../utils/errors";
+import { sendSuccess } from "../../utils/response";
 
 export async function createIssueHandler(req: Request, res: Response): Promise<void> {
   if (!req.user) {
@@ -27,7 +27,10 @@ export async function createIssueHandler(req: Request, res: Response): Promise<v
 export async function getAllIssuesHandler(req: Request, res: Response): Promise<void> {
   const issues = await getAllIssues(req.query as Record<string, string>);
 
-  sendSuccess(res, { data: issues });
+  sendSuccess(res, {
+    message: "Issues retrived successfully",
+    data: issues,
+  });
 }
 
 export async function getIssueByIdHandler(req: Request, res: Response): Promise<void> {
@@ -39,7 +42,10 @@ export async function getIssueByIdHandler(req: Request, res: Response): Promise<
 
   const issue = await getIssueById(issueId);
 
-  sendSuccess(res, { data: issue });
+  sendSuccess(res, {
+    message: "Issue retrived successfully",
+    data: issue,
+  });
 }
 
 export async function updateIssueHandler(req: Request, res: Response): Promise<void> {

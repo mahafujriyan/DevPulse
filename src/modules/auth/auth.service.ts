@@ -1,15 +1,15 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { dbQuery } from "../config/db";
-import { env } from "../config/env";
-import type { JwtPayload, UserRole } from "../types";
-import { BadRequestError, ConflictError, UnauthorizedError } from "../utils/errors";
+import { dbQuery } from "../../config/db";
+import { env } from "../../config/env";
+import type { JwtPayload, UserRole } from "../../types";
+import { BadRequestError, ConflictError, UnauthorizedError } from "../../utils/errors";
 import {
   validateEmail,
   validateEnum,
   validateRequiredString,
   stripPassword,
-} from "../utils/validation";
+} from "../../utils/validation";
 
 const BCRYPT_ROUNDS = 10;
 const USER_ROLES = ["contributor", "maintainer"] as const;

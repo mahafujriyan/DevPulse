@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import { loginUser, registerUser } from "../services/authService";
-import { sendSuccess } from "../utils/response";
+import { loginUser, registerUser } from "./auth.service";
+import { sendSuccess } from "../../utils/response";
 
 export async function signup(req: Request, res: Response): Promise<void> {
   const user = await registerUser(req.body);

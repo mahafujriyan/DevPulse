@@ -12,6 +12,15 @@ function requireEnv(name: string): string {
   return value;
 }
 
+function databaseUrlValue(): string {
+  return process.env.DATABASE_URL || "";
+}
+
+/** Neon, Supabase, and similar cloud Postgres hosts require SSL. */
+function hostedPostgresRequiresSsl(url: string): boolean {
+  return /neon\.tech|supabase\.co|elephantsql\.com/i.test(url);
+}
+
 export const env = {
   port: Number(process.env.PORT) || 5000,
   nodeEnv: process.env.NODE_ENV || "development",
@@ -22,8 +31,11 @@ export const env = {
     return requireEnv("JWT_SECRET");
   },
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || "7d",
-  get isSupabase(): boolean {
-    return (process.env.DATABASE_URL || "").includes("supabase");
+  get requiresSsl(): boolean {
+    return hostedPostgresRequiresSsl(databaseUrlValue());
+  },
+  get isNeon(): boolean {
+    return databaseUrlValue().includes("neon.tech");
   },
   get isVercel(): boolean {
     return Boolean(process.env.VERCEL);

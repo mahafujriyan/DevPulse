@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { getProfile, login, signup } from "../controllers/authController";
-import { asyncHandler } from "../middleware/asyncHandler";
-import { authenticate } from "../middleware/authMiddleware";
-import { methodNotAllowed } from "../middleware/methodNotAllowed";
-import { sendSuccess } from "../utils/response";
+import { getProfile, login, signup } from "./auth.controller";
+import { asyncHandler } from "../../middleware/asyncHandler";
+import { authenticate } from "../../middleware/authMiddleware";
+import { methodNotAllowed } from "../../middleware/methodNotAllowed";
+import { sendSuccess } from "../../utils/response";
 
 const router = Router();
 

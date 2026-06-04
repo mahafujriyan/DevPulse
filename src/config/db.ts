@@ -3,13 +3,24 @@ import { env } from "./env";
 
 let pool: Pool | null = null;
 
-function buildConnectionString(url: string): string {
-  if (url.includes("connect_timeout")) {
-    return url;
+/** Node pg does not support channel_binding; Neon UI adds it by default. */
+function normalizeDatabaseUrl(url: string): string {
+  let normalized = url.trim();
+
+  normalized = normalized.replace(/&?channel_binding=require/gi, "");
+  normalized = normalized.replace(/\?&/, "?").replace(/[?&]$/, "");
+
+  if (!/sslmode=/i.test(normalized) && env.requiresSsl) {
+    const separator = normalized.includes("?") ? "&" : "?";
+    normalized = `${normalized}${separator}sslmode=require`;
   }
 
-  const separator = url.includes("?") ? "&" : "?";
-  return `${url}${separator}connect_timeout=5`;
+  if (!/connect_timeout=/i.test(normalized)) {
+    const separator = normalized.includes("?") ? "&" : "?";
+    normalized = `${normalized}${separator}connect_timeout=10`;
+  }
+
+  return normalized;
 }
 
 function getPool(): Pool {
@@ -17,12 +28,14 @@ function getPool(): Pool {
     return pool;
   }
 
+  const connectionString = normalizeDatabaseUrl(env.databaseUrl);
+
   pool = new Pool({
-    connectionString: buildConnectionString(env.databaseUrl),
-    ssl: env.isSupabase ? { rejectUnauthorized: false } : undefined,
+    connectionString,
+    ssl: env.requiresSsl ? { rejectUnauthorized: false } : undefined,
     max: env.isVercel ? 1 : 10,
     idleTimeoutMillis: env.isVercel ? 1000 : 30000,
-    connectionTimeoutMillis: 5000,
+    connectionTimeoutMillis: 10000,
     allowExitOnIdle: env.isVercel,
   });
 

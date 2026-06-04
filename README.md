@@ -14,23 +14,23 @@ Internal tech issue and feature tracker for software teams. Report bugs, suggest
 ## Prerequisites
 
 - Node.js 24.x or higher
-- PostgreSQL (local via pgAdmin) **or** Supabase hosted database
+- PostgreSQL (local via pgAdmin) **or** [Neon](https://neon.tech) hosted database
 
 ## Project Structure
 
 ```
 DevPulse/
 ├── database/
-│   └── schema.sql          # SQL schema (users + issues)
+│   └── schema.sql              # SQL schema (users + issues)
 ├── src/
-│   ├── config/             # env + PostgreSQL pool
-│   ├── controllers/        # HTTP handlers
-│   ├── database/           # migration runner
-│   ├── middleware/         # auth, errors, async wrapper
-│   ├── routes/             # Express routers
-│   ├── services/           # business logic + raw SQL
-│   ├── types/              # TypeScript types
-│   └── utils/              # responses, validation, errors
+│   ├── config/                 # env + PostgreSQL pool
+│   ├── middleware/             # auth, errors, async wrapper
+│   ├── modules/
+│   │   ├── auth/               # signup, login routes + service
+│   │   └── issues/             # CRUD routes + service
+│   ├── database/               # migration runner
+│   ├── types/                  # TypeScript interfaces
+│   └── utils/                  # responses, validation, errors
 ├── .env.example
 └── package.json
 ```
@@ -66,17 +66,17 @@ Required variables:
 DATABASE_URL=postgresql://postgres:your_password@localhost:5432/devpulse
 ```
 
-**Supabase:** Project Settings → Database → Connection string (URI). Use your database password, not the publishable API key.
+**Neon:** Dashboard → Connect → enable **Connection pooling** → copy the pooled URI. Use only `?sslmode=require` (remove `channel_binding=require` if present).
 
 ```env
-DATABASE_URL=postgresql://postgres.[project-ref]:[PASSWORD]@aws-0-[region].pooler.supabase.com:6543/postgres
+DATABASE_URL=postgresql://neondb_owner:YOUR_PASSWORD@ep-xxxx-pooler.region.aws.neon.tech/neondb?sslmode=require
 ```
 
 ### 3. Create the database
 
 **pgAdmin:** Create a database named `devpulse`.
 
-**Supabase:** Use the default `postgres` database or create one in the SQL editor.
+**Neon:** Use the default `neondb` database or run `database/schema.sql` in the Neon SQL Editor.
 
 ### 4. Run migrations
 
@@ -84,7 +84,7 @@ DATABASE_URL=postgresql://postgres.[project-ref]:[PASSWORD]@aws-0-[region].poole
 npm run db:migrate
 ```
 
-Or paste `database/schema.sql` into pgAdmin Query Tool / Supabase SQL Editor.
+Or paste `database/schema.sql` into pgAdmin Query Tool / Neon SQL Editor.
 
 ### 5. Start the server
 

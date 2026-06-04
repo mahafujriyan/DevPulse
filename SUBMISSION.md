@@ -14,6 +14,7 @@
 
 ### Code
 - [x] TypeScript + Express modular routers
+- [x] `modules/`, `config/`, `middleware/`, `utils/` directory layout
 - [x] Raw SQL with `pg` (no ORM, no JOINs)
 - [x] bcrypt password hashing (10 rounds)
 - [x] JWT authentication
@@ -22,9 +23,9 @@
 - [x] Standard success/error response format
 - [x] `npm run build` passes
 
-### Database (Supabase)
+### Database (Neon)
 - [x] `database/schema.sql` — users + issues tables
-- [x] Run migration: `npm run db:migrate` OR Supabase SQL Editor
+- [x] Run migration: `npm run db:migrate` OR Neon SQL Editor
 
 ### Vercel Deploy
 - [ ] Code pushed to GitHub `main`
@@ -40,13 +41,16 @@
 **Settings → Environment Variables** (Production + Preview + Development):
 
 ```
-DATABASE_URL=postgresql://postgres.qwrbhzbvfnojvxoshvse:YOUR_PASSWORD@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres
+DATABASE_URL=postgresql://neondb_owner:YOUR_PASSWORD@ep-xxxx-pooler.region.aws.neon.tech/neondb?sslmode=require
 JWT_SECRET=your_long_random_secret
 JWT_EXPIRES_IN=7d
 NODE_ENV=production
 ```
 
-Use **Session pooler** (port **6543**), NOT direct connection (5432).
+**Important (Neon):**
+- Turn **Connection pooling ON** in Neon and use the **-pooler** hostname (required for Vercel).
+- Use `?sslmode=require` only — **do not** include `channel_binding=require` (breaks Node.js `pg`).
+- The app strips `channel_binding` automatically if pasted by mistake.
 
 ---
 
@@ -141,7 +145,8 @@ Authorization: <maintainer_token>
 | Browser GET `/api/auth/signup` | Postman **POST** `/api/auth/signup` |
 | `/api/auth/singup` | `/api/auth/signup` |
 | No Vercel env variables | Set all 4 env vars in dashboard |
-| Supabase port 5432 | Session pooler port **6543** |
+| Neon URL with `channel_binding=require` | Use `?sslmode=require` only |
+| Neon direct host (no `-pooler`) on Vercel | Use **pooled** connection string |
 | Params tab in Postman | Body → raw → JSON |
 
 ---
@@ -150,7 +155,7 @@ Authorization: <maintainer_token>
 
 ```bash
 npm install
-cp .env.example .env    # edit with your credentials
+cp .env.example .env    # edit with your Neon credentials
 npm run db:migrate
 npm run dev
 ```
@@ -165,6 +170,7 @@ Server: `http://localhost:5000`
 |-------------|--------|
 | Node.js + TypeScript | Done |
 | Express modular routers | Done |
+| `modules/`, `config/`, `middleware/`, `utils/` | Done |
 | PostgreSQL native `pg` | Done |
 | Raw SQL, no ORM/JOINs | Done |
 | bcrypt (8–12 rounds) | Done (10 rounds) |

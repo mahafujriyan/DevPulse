@@ -1,16 +1,16 @@
-import { dbQuery } from "../config/db";
-import type { IssueStatus, IssueType, JwtPayload } from "../types";
+import { dbQuery } from "../../config/db";
+import type { IssueStatus, IssueType, JwtPayload } from "../../types";
 import {
   BadRequestError,
   ConflictError,
   ForbiddenError,
   NotFoundError,
-} from "../utils/errors";
+} from "../../utils/errors";
 import {
   validateEnum,
   validateOptionalEnum,
   validateRequiredString,
-} from "../utils/validation";
+} from "../../utils/validation";
 
 const ISSUE_TYPES = ["bug", "feature_request"] as const;
 const ISSUE_STATUSES = ["open", "in_progress", "resolved"] as const;

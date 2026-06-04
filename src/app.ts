@@ -1,8 +1,8 @@
 import express from "express";
 import cors from "cors";
 import { dbQuery } from "./config/db";
-import authRoutes from "./routes/authRoutes";
-import issueRoutes from "./routes/issueRoutes";
+import authRoutes from "./modules/auth/auth.routes";
+import issueRoutes from "./modules/issues/issues.routes";
 import { asyncHandler } from "./middleware/asyncHandler";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler";
 import { sendSuccess, sendError } from "./utils/response";
