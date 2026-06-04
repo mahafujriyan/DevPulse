@@ -11,15 +11,5 @@
       "source": "/(.*)",
       "destination": "/api"
     }
-  ],
-  "outputFileTracingIncludes": {
-    "api/index.js": [
-      "node_modules/express/**",
-      "node_modules/bcrypt/**",
-      "node_modules/pg/**",
-      "node_modules/pg-pool/**",
-      "node_modules/pg-connection-string/**",
-      "dist/**"
-    ]
-  }
+  ]
 }
