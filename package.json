@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "node ./node_modules/typescript/lib/tsc.js --project tsconfig.json --pretty false && node -e \"console.log('Build completed successfully -> dist/')\"",
-    "vercel-build": "node ./node_modules/typescript/lib/tsc.js --project tsconfig.json --pretty false",
+    "vercel-build": "node ./node_modules/typescript/lib/tsc.js --project tsconfig.json --pretty false && node ./node_modules/typescript/lib/tsc.js --project tsconfig.api.json --pretty false",
     "start": "node dist/server.js",
     "db:migrate": "ts-node --transpile-only src/database/migrate.ts",
     "test": "echo \"Error: no test specified\" && exit 1"

@@ -3,14 +3,14 @@ import cors from "cors";
 import { dbQuery } from "./config/db";
 import { env } from "./config/env";
 import { validateEnvironment } from "./config/validateEnv";
-
-validateEnvironment();
 import authRoutes from "./modules/auth/auth.routes";
 import issueRoutes from "./modules/issues/issues.routes";
 import { asyncHandler } from "./middleware/asyncHandler";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler";
 import { sendSuccess, sendError } from "./utils/response";
 import { StatusCodes } from "http-status-codes";
+
+validateEnvironment();
 
 const app = express();
 
@@ -64,8 +64,3 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 export default app;
-
-/** Vercel serverless: allow longer Neon cold-start + queries */
-export const config = {
-  maxDuration: 30,
-};

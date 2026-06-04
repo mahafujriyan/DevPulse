@@ -1,8 +1,27 @@
 {
   "buildCommand": "npm run vercel-build",
-  "functions": {
-    "src/app.ts": {
-      "maxDuration": 30
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/api"
     }
+  ],
+  "functions": {
+    "api/index.ts": {
+      "maxDuration": 30,
+      "includeFiles": "dist/**"
+    }
+  },
+  "outputFileTracingIncludes": {
+    "api/index.ts": [
+      "node_modules/express/**",
+      "node_modules/bcrypt/**",
+      "node_modules/pg/**",
+      "node_modules/pg-pool/**",
+      "node_modules/pg-connection-string/**",
+      "node_modules/body-parser/**",
+      "node_modules/cors/**",
+      "dist/**"
+    ]
   }
 }
