@@ -1,14 +1,19 @@
 import dotenv from "dotenv";
+import { loadEnvironment } from "./validateEnv";
 
 if (!process.env.VERCEL) {
-  dotenv.config();
+  // override: true — .env must win over shell/IDE defaults (e.g. JWT_SECRET=test)
+  dotenv.config({ override: true });
 }
+
+loadEnvironment();
 
 function requireEnv(name: string): string {
   const value = process.env[name]?.trim();
   if (!value) {
     throw new Error(
-      `Missing required environment variable: ${name}. Set it in Vercel → Settings → Environment Variables (Neon DATABASE_URL).`
+      `Missing required environment variable: ${name}. ` +
+        "Local: .env file. Vercel: Settings → Environment Variables."
     );
   }
   return value;
@@ -26,13 +31,16 @@ function isNeonDatabaseUrl(url: string): boolean {
 export const env = {
   port: Number(process.env.PORT) || 5000,
   nodeEnv: process.env.NODE_ENV || "development",
+  get isProduction(): boolean {
+    return env.nodeEnv === "production";
+  },
   get databaseUrl(): string {
     return requireEnv("DATABASE_URL");
   },
   get jwtSecret(): string {
     return requireEnv("JWT_SECRET");
   },
-  jwtExpiresIn: process.env.JWT_EXPIRES_IN || "7d",
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN?.trim() || "7d",
   get requiresSsl(): boolean {
     return isNeonDatabaseUrl(databaseUrlValue());
   },

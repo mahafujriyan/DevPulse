@@ -1,6 +1,10 @@
 import express from "express";
 import cors from "cors";
 import { dbQuery } from "./config/db";
+import { env } from "./config/env";
+import { validateEnvironment } from "./config/validateEnv";
+
+validateEnvironment();
 import authRoutes from "./modules/auth/auth.routes";
 import issueRoutes from "./modules/issues/issues.routes";
 import { asyncHandler } from "./middleware/asyncHandler";
@@ -34,12 +38,20 @@ app.get(
       await dbQuery("SELECT 1", [], 5000);
       sendSuccess(res, {
         message: "DevPulse API is healthy",
-        data: { database: "connected" },
+        data: {
+          database: "connected",
+          environment: env.nodeEnv,
+          neon: env.isNeon,
+        },
       });
-    } catch {
+    } catch (error) {
+      const detail =
+        !env.isProduction && error instanceof Error ? error.message : undefined;
+
       sendError(res, {
         statusCode: StatusCodes.SERVICE_UNAVAILABLE,
         message: "Database connection failed",
+        errors: detail,
       });
     }
   })

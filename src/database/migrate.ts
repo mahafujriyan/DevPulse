@@ -1,6 +1,9 @@
 import fs from "fs";
 import path from "path";
 import getPool from "../config/db";
+import { validateEnvironment } from "../config/validateEnv";
+
+validateEnvironment();
 
 async function migrate(): Promise<void> {
   const schemaPath = path.join(__dirname, "../../database/schema.sql");
