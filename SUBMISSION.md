@@ -34,6 +34,12 @@
 - [ ] Redeploy after env setup
 - [ ] `/api/health` returns `"database": "connected"`
 
+**If you see `FUNCTION_INVOCATION_FAILED`:**
+1. Vercel → **Settings → Environment Variables** — set `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `NODE_ENV=production`
+2. Use Neon pooled URL with `?sslmode=require` only (no `channel_binding`)
+3. **Deployments → latest → Logs** — check the real error (missing env, bcrypt, DB)
+4. Express entry is `src/app.ts` (not `api/index.ts`) — push latest code and redeploy
+
 ---
 
 ## Vercel Environment Variables

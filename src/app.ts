@@ -52,3 +52,8 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 export default app;
+
+/** Vercel serverless: allow longer Neon cold-start + queries */
+export const config = {
+  maxDuration: 30,
+};

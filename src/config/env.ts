@@ -5,9 +5,11 @@ if (!process.env.VERCEL) {
 }
 
 function requireEnv(name: string): string {
-  const value = process.env[name];
+  const value = process.env[name]?.trim();
   if (!value) {
-    throw new Error(`Missing required environment variable: ${name}`);
+    throw new Error(
+      `Missing required environment variable: ${name}. Set it in Vercel → Settings → Environment Variables.`
+    );
   }
   return value;
 }

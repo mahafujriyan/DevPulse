@@ -33,9 +33,7 @@ export function errorHandler(
 
   const message = err instanceof Error ? err.message : "Internal server error";
 
-  if (process.env.NODE_ENV !== "production") {
-    console.error(err);
-  }
+  console.error(err);
 
   return sendError(res, {
     statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
