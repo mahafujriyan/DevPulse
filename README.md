@@ -53,17 +53,17 @@ cp .env.example .env
 
 Required variables:
 
-| Variable | Description |
-|----------|-------------|
-| `PORT` | Server port (default `5000`) |
-| `DATABASE_URL` | PostgreSQL connection string |
-| `JWT_SECRET` | Secret for signing JWTs |
-| `JWT_EXPIRES_IN` | Token expiry (default `7d`) |
+| Variable         | Description                  |
+| ---------------- | ---------------------------- |
+| `PORT`           | Server port (default `5000`) |
+| `DATABASE_URL`   | PostgreSQL connection string |
+| `JWT_SECRET`     | Secret for signing JWTs      |
+| `JWT_EXPIRES_IN` | Token expiry (default `7d`)  |
 
 **Local pgAdmin:**
 
 ```env
-DATABASE_URL=postgresql://postgres:your_password@localhost:5432/devpulse
+
 ```
 
 **Neon:** Dashboard → Connect → enable **Connection pooling** → copy the pooled URI. Use only `?sslmode=require` (remove `channel_binding=require` if present).
@@ -103,40 +103,40 @@ Health check: `GET http://localhost:5000/api/health`
 
 ## npm Scripts
 
-| Script | Description |
-|--------|-------------|
-| `npm run dev` | Start dev server with hot reload |
-| `npm run build` | Compile TypeScript to `dist/` |
-| `npm start` | Run compiled production server |
-| `npm run db:migrate` | Apply `database/schema.sql` |
+| Script               | Description                      |
+| -------------------- | -------------------------------- |
+| `npm run dev`        | Start dev server with hot reload |
+| `npm run build`      | Compile TypeScript to `dist/`    |
+| `npm start`          | Run compiled production server   |
+| `npm run db:migrate` | Apply `database/schema.sql`      |
 
 ## API Endpoints
 
 ### Authentication
 
-| Method | Endpoint | Access | Description |
-|--------|----------|--------|-------------|
-| POST | `/api/auth/signup` | Public | Register user |
-| POST | `/api/auth/login` | Public | Login, receive JWT |
-| GET | `/api/auth/me` | Authenticated | Verify token / get profile |
+| Method | Endpoint           | Access        | Description                |
+| ------ | ------------------ | ------------- | -------------------------- |
+| POST   | `/api/auth/signup` | Public        | Register user              |
+| POST   | `/api/auth/login`  | Public        | Login, receive JWT         |
+| GET    | `/api/auth/me`     | Authenticated | Verify token / get profile |
 
 ### Issues
 
-| Method | Endpoint | Access | Description |
-|--------|----------|--------|-------------|
-| GET | `/api/issues` | Public | List issues (filter/sort) |
-| GET | `/api/issues/:id` | Public | Get single issue |
-| POST | `/api/issues` | Authenticated | Create issue |
-| PATCH | `/api/issues/:id` | Authenticated | Update issue |
-| DELETE | `/api/issues/:id` | Maintainer | Delete issue |
+| Method | Endpoint          | Access        | Description               |
+| ------ | ----------------- | ------------- | ------------------------- |
+| GET    | `/api/issues`     | Public        | List issues (filter/sort) |
+| GET    | `/api/issues/:id` | Public        | Get single issue          |
+| POST   | `/api/issues`     | Authenticated | Create issue              |
+| PATCH  | `/api/issues/:id` | Authenticated | Update issue              |
+| DELETE | `/api/issues/:id` | Maintainer    | Delete issue              |
 
 ### Query parameters (GET `/api/issues`)
 
-| Param | Values | Default |
-|-------|--------|---------|
-| `sort` | `newest`, `oldest` | `newest` |
-| `type` | `bug`, `feature_request` | (none) |
-| `status` | `open`, `in_progress`, `resolved` | (none) |
+| Param    | Values                            | Default  |
+| -------- | --------------------------------- | -------- |
+| `sort`   | `newest`, `oldest`                | `newest` |
+| `type`   | `bug`, `feature_request`          | (none)   |
+| `status` | `open`, `in_progress`, `resolved` | (none)   |
 
 ## Authentication
 
@@ -154,15 +154,15 @@ Authorization: Bearer <token>
 
 ## Roles & Permissions
 
-| Action | Contributor | Maintainer |
-|--------|:-----------:|:----------:|
-| Register / login | ✅ | ✅ |
-| Create issues | ✅ | ✅ |
-| View all issues | ✅ | ✅ |
-| Update own open issue | ✅ | ✅ |
-| Update any issue | ❌ | ✅ |
-| Change issue status | ❌ | ✅ |
-| Delete issues | ❌ | ✅ |
+| Action                | Contributor | Maintainer |
+| --------------------- | :---------: | :--------: |
+| Register / login      |     ✅      |     ✅     |
+| Create issues         |     ✅      |     ✅     |
+| View all issues       |     ✅      |     ✅     |
+| Update own open issue |     ✅      |     ✅     |
+| Update any issue      |     ❌      |     ✅     |
+| Change issue status   |     ❌      |     ✅     |
+| Delete issues         |     ❌      |     ✅     |
 
 ## Response Format
 
@@ -194,11 +194,11 @@ Authorization: Bearer <token>
 
 ## Live Deployment (Vercel)
 
-| Link | URL |
-|------|-----|
-| Live API | `https://dev-pulse-ten-beta.vercel.app` |
-| Health | `https://dev-pulse-ten-beta.vercel.app/api/health` |
-| GitHub | `https://github.com/mahafujriyan/DevPulse` |
+| Link     | URL                                                |
+| -------- | -------------------------------------------------- |
+| Live API | `https://dev-pulse-ten-beta.vercel.app`            |
+| Health   | `https://dev-pulse-ten-beta.vercel.app/api/health` |
+| GitHub   | `https://github.com/mahafujriyan/DevPulse`         |
 
 ### Deploy steps
 
