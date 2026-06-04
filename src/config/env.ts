@@ -8,7 +8,7 @@ function requireEnv(name: string): string {
   const value = process.env[name]?.trim();
   if (!value) {
     throw new Error(
-      `Missing required environment variable: ${name}. Set it in Vercel → Settings → Environment Variables.`
+      `Missing required environment variable: ${name}. Set it in Vercel → Settings → Environment Variables (Neon DATABASE_URL).`
     );
   }
   return value;
@@ -18,9 +18,9 @@ function databaseUrlValue(): string {
   return process.env.DATABASE_URL || "";
 }
 
-/** Neon, Supabase, and similar cloud Postgres hosts require SSL. */
-function hostedPostgresRequiresSsl(url: string): boolean {
-  return /neon\.tech|supabase\.co|elephantsql\.com/i.test(url);
+/** Neon hosted Postgres (*.neon.tech) requires SSL connections. */
+function isNeonDatabaseUrl(url: string): boolean {
+  return /\.neon\.tech/i.test(url);
 }
 
 export const env = {
@@ -34,10 +34,10 @@ export const env = {
   },
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || "7d",
   get requiresSsl(): boolean {
-    return hostedPostgresRequiresSsl(databaseUrlValue());
+    return isNeonDatabaseUrl(databaseUrlValue());
   },
   get isNeon(): boolean {
-    return databaseUrlValue().includes("neon.tech");
+    return isNeonDatabaseUrl(databaseUrlValue());
   },
   get isVercel(): boolean {
     return Boolean(process.env.VERCEL);

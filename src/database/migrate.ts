@@ -7,9 +7,9 @@ async function migrate(): Promise<void> {
   const sql = fs.readFileSync(schemaPath, "utf-8");
   const pool = getPool();
 
-  console.log("Running database migration...");
+  console.log("Running Neon/PostgreSQL migration...");
   await pool.query(sql);
-  console.log("Migration completed: users and issues tables are ready.");
+  console.log("Migration completed on Neon: users and issues tables are ready.");
 }
 
 migrate()

@@ -7,14 +7,14 @@ Internal tech issue and feature tracker for software teams. Report bugs, suggest
 - **Node.js** 24.x+ (LTS)
 - **TypeScript**
 - **Express.js** (modular routers)
-- **PostgreSQL** via native `pg` driver (raw SQL only — no ORM, no query builders, no JOINs)
+- **Neon PostgreSQL** via native `pg` driver (raw SQL only — no ORM, no query builders, no JOINs)
 - **bcrypt** (password hashing)
 - **jsonwebtoken** (JWT auth)
 
 ## Prerequisites
 
 - Node.js 24.x or higher
-- PostgreSQL (local via pgAdmin) **or** [Neon](https://neon.tech) hosted database
+- [Neon](https://neon.tech) PostgreSQL account (free tier works)
 
 ## Project Structure
 
@@ -56,27 +56,29 @@ Required variables:
 | Variable         | Description                  |
 | ---------------- | ---------------------------- |
 | `PORT`           | Server port (default `5000`) |
-| `DATABASE_URL`   | PostgreSQL connection string |
+| `DATABASE_URL`   | Neon PostgreSQL connection string (pooled) |
 | `JWT_SECRET`     | Secret for signing JWTs      |
 | `JWT_EXPIRES_IN` | Token expiry (default `7d`)  |
 
-**Local pgAdmin:**
+**Neon connection string**
 
-```env
-
-```
-
-**Neon:** Dashboard → Connect → enable **Connection pooling** → copy the pooled URI. Use only `?sslmode=require` (remove `channel_binding=require` if present).
+1. [Neon Console](https://console.neon.tech) → your project → **Connect**
+2. Turn **Connection pooling** ON
+3. Copy the pooled URI (`-pooler` in hostname)
+4. Use only `?sslmode=require` — remove `channel_binding=require` if Neon adds it
 
 ```env
 DATABASE_URL=postgresql://neondb_owner:YOUR_PASSWORD@ep-xxxx-pooler.region.aws.neon.tech/neondb?sslmode=require
+JWT_SECRET=your_long_random_secret
+JWT_EXPIRES_IN=7d
 ```
 
-### 3. Create the database
+### 3. Create tables on Neon
 
-**pgAdmin:** Create a database named `devpulse`.
+Use the default `neondb` database, then either:
 
-**Neon:** Use the default `neondb` database or run `database/schema.sql` in the Neon SQL Editor.
+- Run `npm run db:migrate`, or
+- Paste `database/schema.sql` into **Neon SQL Editor** → Run
 
 ### 4. Run migrations
 
@@ -84,7 +86,7 @@ DATABASE_URL=postgresql://neondb_owner:YOUR_PASSWORD@ep-xxxx-pooler.region.aws.n
 npm run db:migrate
 ```
 
-Or paste `database/schema.sql` into pgAdmin Query Tool / Neon SQL Editor.
+Or paste `database/schema.sql` into the Neon SQL Editor.
 
 ### 5. Start the server
 
@@ -204,8 +206,8 @@ Authorization: Bearer <token>
 
 1. Push code to GitHub
 2. Import repo on [vercel.com](https://vercel.com)
-3. Add environment variables (see `.env.example`)
-4. Redeploy → test `/api/health`
+3. Add **Neon** environment variables (see `.env.example`) — same `DATABASE_URL` as local
+4. Redeploy → test `/api/health` → `"database": "connected"`
 
 Full submission checklist: see [SUBMISSION.md](./SUBMISSION.md)
 

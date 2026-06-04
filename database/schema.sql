@@ -1,5 +1,5 @@
--- DevPulse database schema
--- Run in pgAdmin Query Tool or: npm run db:migrate
+-- DevPulse database schema (Neon PostgreSQL)
+-- Run in Neon SQL Editor or: npm run db:migrate
 
 -- Reusable trigger to refresh updated_at on row changes
 CREATE OR REPLACE FUNCTION set_updated_at()

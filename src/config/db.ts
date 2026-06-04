@@ -3,7 +3,7 @@ import { env } from "./env";
 
 let pool: Pool | null = null;
 
-/** Node pg does not support channel_binding; Neon UI adds it by default. */
+/** Neon pooled URLs: strip channel_binding (unsupported by node-pg), enforce sslmode. */
 function normalizeDatabaseUrl(url: string): string {
   let normalized = url.trim();
 
