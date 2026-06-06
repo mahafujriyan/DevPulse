@@ -1,7 +1,6 @@
--- DevPulse database schema (Neon PostgreSQL)
--- Run in Neon SQL Editor or: npm run db:migrate
+-- DevPulse database schema (PostgreSQL — Supabase / Neon / ElephantSQL)
+-- Run in your provider SQL editor or: npm run db:migrate
 
--- Reusable trigger to refresh updated_at on row changes
 CREATE OR REPLACE FUNCTION set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -51,7 +50,6 @@ CREATE TRIGGER trg_issues_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION set_updated_at();
 
--- Helpful indexes for list/filter queries (no JOINs required)
 CREATE INDEX IF NOT EXISTS idx_issues_reporter_id ON issues (reporter_id);
 CREATE INDEX IF NOT EXISTS idx_issues_status      ON issues (status);
 CREATE INDEX IF NOT EXISTS idx_issues_type        ON issues (type);

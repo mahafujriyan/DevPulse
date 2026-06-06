@@ -24,9 +24,17 @@ app.get("/", (_req, res) => {
     message: "DevPulse API",
     data: {
       health: "/api/health",
-      auth: "/api/auth",
-      issues: "/api/issues",
-      issuesInfo: "/api/issues/info",
+      auth: {
+        signup: "POST /api/auth/signup",
+        login: "POST /api/auth/login",
+      },
+      issues: {
+        list: "GET /api/issues",
+        single: "GET /api/issues/:id",
+        create: "POST /api/issues",
+        update: "PATCH /api/issues/:id",
+        delete: "DELETE /api/issues/:id",
+      },
     },
   });
 });

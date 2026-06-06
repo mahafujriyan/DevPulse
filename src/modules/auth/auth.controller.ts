@@ -22,10 +22,3 @@ export async function login(req: Request, res: Response): Promise<void> {
     data,
   });
 }
-
-export async function getProfile(req: Request, res: Response): Promise<void> {
-  sendSuccess(res, {
-    message: "Authenticated user profile",
-    data: req.user,
-  });
-}

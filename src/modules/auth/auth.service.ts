@@ -2,13 +2,12 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { dbQuery } from "../../config/db";
 import { env } from "../../config/env";
-import type { JwtPayload, UserRole } from "../../types";
+import type { JwtPayload, User, UserRole, UserRow } from "../../types";
 import { BadRequestError, ConflictError, UnauthorizedError } from "../../utils/errors";
 import {
   validateEmail,
   validateEnum,
   validateRequiredString,
-  stripPassword,
 } from "../../utils/validation";
 
 const BCRYPT_ROUNDS = 10;
@@ -21,7 +20,7 @@ interface SignupInput {
   role: UserRole;
 }
 
-export async function registerUser(body: unknown) {
+export async function registerUser(body: unknown): Promise<User> {
   if (!body || typeof body !== "object") {
     throw new BadRequestError("Invalid request body");
   }
@@ -45,7 +44,7 @@ export async function registerUser(body: unknown) {
       [input.name, input.email, hashedPassword, input.role]
     );
 
-    return result.rows[0];
+    return result.rows[0] as User;
   } catch (error: unknown) {
     if (
       error &&
@@ -65,7 +64,12 @@ interface LoginInput {
   password: string;
 }
 
-export async function loginUser(body: unknown) {
+interface LoginResponse {
+  token: string;
+  user: User;
+}
+
+export async function loginUser(body: unknown): Promise<LoginResponse> {
   if (!body || typeof body !== "object") {
     throw new BadRequestError("Invalid request body");
   }
@@ -84,7 +88,7 @@ export async function loginUser(body: unknown) {
     [input.email]
   );
 
-  const user = result.rows[0];
+  const user = result.rows[0] as UserRow | undefined;
 
   if (!user) {
     throw new UnauthorizedError("Invalid email or password");
@@ -106,8 +110,10 @@ export async function loginUser(body: unknown) {
     expiresIn: env.jwtExpiresIn as jwt.SignOptions["expiresIn"],
   });
 
+  const { password: _password, ...safeUser } = user;
+
   return {
     token,
-    user: stripPassword(user),
+    user: safeUser,
   };
 }

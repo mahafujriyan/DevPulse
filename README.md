@@ -1,37 +1,53 @@
 # DevPulse
 
-Internal tech issue and feature tracker for software teams. Report bugs, suggest features, and coordinate resolutions with role-based access control.
+Internal tech issue and feature tracker for software teams — report bugs, suggest features, and coordinate resolutions with role-based access control.
+
+**Live API:** https://dev-pulse-one-sigma.vercel.app
+
+## Features
+
+- User registration and JWT authentication
+- Role-based permissions (`contributor` / `maintainer`)
+- Issue CRUD with filtering and sorting
+- Reporter details without SQL JOINs (separate queries)
+- Standardized JSON success/error responses
+- Deployed on Vercel with PostgreSQL (Supabase)
 
 ## Tech Stack
 
-- **Node.js** 24.x+ (LTS)
-- **TypeScript**
-- **Express.js** (modular routers)
-- **Neon PostgreSQL** via native `pg` driver (raw SQL only — no ORM, no query builders, no JOINs)
-- **bcrypt** (password hashing)
-- **jsonwebtoken** (JWT auth)
-
-## Prerequisites
-
-- Node.js 24.x or higher
-- [Neon](https://neon.tech) PostgreSQL account (free tier works)
+| Technology   | Usage                                      |
+| ------------ | ------------------------------------------ |
+| Node.js 24.x | LTS runtime                                |
+| TypeScript   | Strict typing (no `any`)                     |
+| Express.js   | Modular router architecture                |
+| PostgreSQL   | Native `pg` driver, raw SQL only           |
+| bcrypt       | Password hashing (10 salt rounds)          |
+| jsonwebtoken | JWT auth with `id`, `name`, `role` payload |
+| http-status-codes | Consistent HTTP status codes          |
 
 ## Project Structure
 
 ```
 DevPulse/
 ├── database/
-│   └── schema.sql              # SQL schema (users + issues)
+│   └── schema.sql           # PostgreSQL schema
+├── scripts/
+│   └── build-vercel.cjs     # Vercel production bundle
 ├── src/
-│   ├── config/                 # env + PostgreSQL pool
-│   ├── middleware/             # auth, errors, async wrapper
+│   ├── application.ts       # Express app (Vercel entry)
+│   ├── local-server.ts      # Local dev server
+│   ├── config/                # env, db pool, validation
+│   ├── middleware/            # auth, errors, async handler
 │   ├── modules/
-│   │   ├── auth/               # signup, login routes + service
-│   │   └── issues/             # CRUD routes + service
-│   ├── database/               # migration runner
-│   ├── types/                  # TypeScript interfaces
-│   └── utils/                  # responses, validation, errors
-├── .env.example
+│   │   ├── auth/              # signup, login
+│   │   └── issues/            # issue CRUD
+│   ├── database/
+│   │   └── migrate.ts         # Schema migration runner
+│   ├── types/                 # TypeScript interfaces
+│   └── utils/                 # responses, validation, errors
+├── api/                       # Generated at build (gitignored)
+├── index.js                   # Vercel Express entry shim
+├── vercel.json
 └── package.json
 ```
 
@@ -43,174 +59,142 @@ DevPulse/
 npm install
 ```
 
-### 2. Configure environment
-
-Copy the example file and edit it:
+### 2. Environment variables
 
 ```bash
 cp .env.example .env
 ```
 
-Required variables:
+| Variable         | Description                                |
+| ---------------- | ------------------------------------------ |
+| `PORT`           | Local server port (default `5000`)         |
+| `NODE_ENV`       | `development` or `production`            |
+| `DATABASE_URL`   | PostgreSQL connection string (pooled)      |
+| `JWT_SECRET`     | 32+ character secret (alphanumeric only)   |
+| `JWT_EXPIRES_IN` | Token expiry (default `7d`)              |
 
-| Variable         | Description                  |
-| ---------------- | ---------------------------- |
-| `PORT`           | Server port (default `5000`) |
-| `DATABASE_URL`   | Neon PostgreSQL connection string (pooled) |
-| `JWT_SECRET`     | Secret for signing JWTs      |
-| `JWT_EXPIRES_IN` | Token expiry (default `7d`)  |
+**Supabase (recommended):** Project Settings → Database → Connection string → **Transaction pooler** URI (`pooler.supabase.com`, port `6543`).
 
-**Neon connection string**
-
-1. [Neon Console](https://console.neon.tech) → your project → **Connect**
-2. Turn **Connection pooling** ON
-3. Copy the pooled URI (`-pooler` in hostname)
-4. Use only `?sslmode=require` — remove `channel_binding=require` if Neon adds it
-
-```env
-DATABASE_URL=postgresql://neondb_owner:YOUR_PASSWORD@ep-xxxx-pooler.region.aws.neon.tech/neondb?sslmode=require
-JWT_SECRET=your_long_random_secret
-JWT_EXPIRES_IN=7d
-```
-
-### 3. Create tables on Neon
-
-Use the default `neondb` database, then either:
-
-- Run `npm run db:migrate`, or
-- Paste `database/schema.sql` into **Neon SQL Editor** → Run
-
-### 4. Run migrations
+### 3. Create database tables
 
 ```bash
 npm run db:migrate
 ```
 
-Or paste `database/schema.sql` into the Neon SQL Editor.
+Or paste `database/schema.sql` into your provider's SQL editor.
 
-### 5. Start the server
+### 4. Run locally
 
 ```bash
-# Development (hot reload)
 npm run dev
-
-# Production build
-npm run build
-npm start
 ```
 
-Server runs at `http://localhost:5000`.
-
-Health check: `GET http://localhost:5000/api/health`
-
-## npm Scripts
-
-| Script               | Description                      |
-| -------------------- | -------------------------------- |
-| `npm run dev`        | Start dev server with hot reload |
-| `npm run build`      | Compile TypeScript to `dist/`    |
-| `npm start`          | Run compiled production server   |
-| `npm run db:migrate` | Apply `database/schema.sql`      |
+Server starts at `http://localhost:5000`.
 
 ## API Endpoints
 
 ### Authentication
 
-| Method | Endpoint           | Access        | Description                |
-| ------ | ------------------ | ------------- | -------------------------- |
-| POST   | `/api/auth/signup` | Public        | Register user              |
-| POST   | `/api/auth/login`  | Public        | Login, receive JWT         |
-| GET    | `/api/auth/me`     | Authenticated | Verify token / get profile |
+| Method | Endpoint           | Access | Description        |
+| ------ | ------------------ | ------ | ------------------ |
+| POST   | `/api/auth/signup` | Public | Register new user  |
+| POST   | `/api/auth/login`  | Public | Login, get JWT     |
 
 ### Issues
 
-| Method | Endpoint          | Access        | Description               |
-| ------ | ----------------- | ------------- | ------------------------- |
-| GET    | `/api/issues`     | Public        | List issues (filter/sort) |
-| GET    | `/api/issues/:id` | Public        | Get single issue          |
-| POST   | `/api/issues`     | Authenticated | Create issue              |
-| PATCH  | `/api/issues/:id` | Authenticated | Update issue              |
-| DELETE | `/api/issues/:id` | Maintainer    | Delete issue              |
+| Method | Endpoint            | Access       | Description              |
+| ------ | ------------------- | ------------ | ------------------------ |
+| POST   | `/api/issues`       | Authenticated | Create issue            |
+| GET    | `/api/issues`       | Public       | List issues (filter/sort) |
+| GET    | `/api/issues/:id`   | Public       | Get single issue         |
+| PATCH  | `/api/issues/:id`   | Authenticated | Update issue            |
+| DELETE | `/api/issues/:id`   | Maintainer   | Delete issue             |
 
-### Query parameters (GET `/api/issues`)
+**Query parameters for `GET /api/issues`:**
 
-| Param    | Values                            | Default  |
-| -------- | --------------------------------- | -------- |
-| `sort`   | `newest`, `oldest`                | `newest` |
-| `type`   | `bug`, `feature_request`          | (none)   |
-| `status` | `open`, `in_progress`, `resolved` | (none)   |
+| Param    | Values                              | Default  |
+| -------- | ----------------------------------- | -------- |
+| `sort`   | `newest`, `oldest`                  | `newest` |
+| `type`   | `bug`, `feature_request`            | (none)   |
+| `status` | `open`, `in_progress`, `resolved`   | (none)   |
 
-## Authentication
+**Authorization header:** `Authorization: <JWT_TOKEN>` (Bearer prefix also accepted)
 
-Send the JWT in the `Authorization` header:
+### Health
 
-```
-Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
-
-Bearer prefix is also supported:
-
-```
-Authorization: Bearer <token>
-```
-
-## Roles & Permissions
-
-| Action                | Contributor | Maintainer |
-| --------------------- | :---------: | :--------: |
-| Register / login      |     ✅      |     ✅     |
-| Create issues         |     ✅      |     ✅     |
-| View all issues       |     ✅      |     ✅     |
-| Update own open issue |     ✅      |     ✅     |
-| Update any issue      |     ❌      |     ✅     |
-| Change issue status   |     ❌      |     ✅     |
-| Delete issues         |     ❌      |     ✅     |
+| Method | Endpoint       | Access | Description     |
+| ------ | -------------- | ------ | --------------- |
+| GET    | `/api/health`  | Public | DB connectivity |
 
 ## Response Format
 
 **Success:**
-
 ```json
-{
-  "success": true,
-  "message": "Operation description",
-  "data": {}
-}
+{ "success": true, "message": "...", "data": {} }
 ```
 
 **Error:**
-
 ```json
-{
-  "success": false,
-  "message": "Error description",
-  "errors": "Optional details"
-}
+{ "success": false, "message": "...", "errors": "..." }
 ```
 
-## Postman Tips
+## User Roles
 
-1. Use **Body → raw → JSON** for POST/PATCH requests (not Params).
-2. Login first, copy the `token`, then add it as an `Authorization` header on protected routes.
-3. Contributors can only PATCH their own issues while status is `open`.
+| Role          | Permissions                                              |
+| ------------- | -------------------------------------------------------- |
+| `contributor` | Register, login, create issues, view all, update own open issues |
+| `maintainer`  | All contributor actions + update any issue/status, delete any issue |
 
-## Live Deployment (Vercel)
+## Database Schema
 
-| Link     | URL                                                |
-| -------- | -------------------------------------------------- |
-| Live API | `https://dev-pulse-ten-beta.vercel.app`            |
-| Health   | `https://dev-pulse-ten-beta.vercel.app/api/health` |
-| GitHub   | `https://github.com/mahafujriyan/DevPulse`         |
+### `users`
 
-### Deploy steps
+| Field        | Description                          |
+| ------------ | ------------------------------------ |
+| `id`         | Auto-increment primary key           |
+| `name`       | Display name (required)              |
+| `email`      | Unique login email (required)        |
+| `password`   | bcrypt hash (never returned in API)  |
+| `role`       | `contributor` or `maintainer`        |
+| `created_at` | Auto-generated timestamp             |
+| `updated_at` | Auto-updated on change               |
 
-1. Push code to GitHub
-2. Import repo on [vercel.com](https://vercel.com)
-3. Add **Neon** environment variables (see `.env.example`) — same `DATABASE_URL` as local
-4. Redeploy → test `/api/health` → `"database": "connected"`
+### `issues`
 
-Full submission checklist: see [SUBMISSION.md](./SUBMISSION.md)
+| Field          | Description                              |
+| -------------- | ---------------------------------------- |
+| `id`           | Auto-increment primary key               |
+| `title`        | Max 150 characters (required)            |
+| `description`  | Min 20 characters (required)             |
+| `type`         | `bug` or `feature_request`               |
+| `status`       | `open`, `in_progress`, `resolved`        |
+| `reporter_id`  | User ID (validated in application logic) |
+| `created_at`   | Auto-generated timestamp                 |
+| `updated_at`   | Auto-updated on change                   |
 
-## License
+## Scripts
 
-ISC
+| Command              | Description                        |
+| -------------------- | ---------------------------------- |
+| `npm run dev`        | Start local dev server             |
+| `npm run build`      | Compile TypeScript to `dist/`      |
+| `npm run vercel-build` | Bundle for Vercel deployment     |
+| `npm run db:migrate` | Run `database/schema.sql`          |
+| `npm start`          | Run compiled local server          |
+
+## Vercel Deployment
+
+1. Push to GitHub (public repo)
+2. Import project in Vercel — Framework Preset: **Other**, Node.js **24.x**
+3. Set environment variables:
+   - `DATABASE_URL` — Supabase pooled URI
+   - `JWT_SECRET` — 32+ alphanumeric characters
+   - `JWT_EXPIRES_IN` — `7d`
+   - `NODE_ENV` — `production`
+4. Deploy — `vercel-build` bundles Express via `@vercel/ncc` into `api/index.js`
+
+## Submission Checklist
+
+- [x] GitHub Repo (Public): https://github.com/mahafujriyan/DevPulse
+- [x] Live Deployment: https://dev-pulse-one-sigma.vercel.app
+- [ ] Interview Video (add your link)

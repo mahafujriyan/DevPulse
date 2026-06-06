@@ -1,5 +1,12 @@
 import { dbQuery } from "../../config/db";
-import type { IssueStatus, IssueType, JwtPayload } from "../../types";
+import type {
+  Issue,
+  IssueWithReporter,
+  IssueStatus,
+  IssueType,
+  JwtPayload,
+  ReporterSummary,
+} from "../../types";
 import {
   BadRequestError,
   ConflictError,
@@ -28,24 +35,7 @@ interface IssueQueryParams {
   status?: string;
 }
 
-interface IssueRow {
-  id: number;
-  title: string;
-  description: string;
-  type: IssueType;
-  status: IssueStatus;
-  reporter_id: number;
-  created_at: Date;
-  updated_at: Date;
-}
-
-interface ReporterSummary {
-  id: number;
-  name: string;
-  role: string;
-}
-
-async function attachReporters(issues: IssueRow[]) {
+async function attachReporters(issues: Issue[]): Promise<IssueWithReporter[]> {
   if (issues.length === 0) {
     return [];
   }
@@ -61,10 +51,7 @@ async function attachReporters(issues: IssueRow[]) {
   );
 
   const reporterMap = new Map<number, ReporterSummary>(
-    usersResult.rows.map((user) => [
-      user.id as number,
-      user as ReporterSummary,
-    ])
+    usersResult.rows.map((user: ReporterSummary) => [user.id, user])
   );
 
   return issues.map((issue) => {
@@ -116,16 +103,16 @@ export async function getAllIssues(query: IssueQueryParams) {
     values
   );
 
-  return attachReporters(result.rows as IssueRow[]);
+  return attachReporters(result.rows as Issue[]);
 }
 
-export async function getIssueById(issueId: number) {
+export async function getIssueById(issueId: number): Promise<IssueWithReporter> {
   const issue = await findIssueRowById(issueId);
   const [formattedIssue] = await attachReporters([issue]);
   return formattedIssue;
 }
 
-export async function createIssue(body: unknown, reporterId: number) {
+export async function createIssue(body: unknown, reporterId: number): Promise<Issue> {
   if (!body || typeof body !== "object") {
     throw new BadRequestError("Invalid request body");
   }
@@ -156,10 +143,10 @@ export async function createIssue(body: unknown, reporterId: number) {
     [input.title, input.description, input.type, reporterId]
   );
 
-  return result.rows[0];
+  return result.rows[0] as Issue;
 }
 
-async function findIssueRowById(issueId: number): Promise<IssueRow> {
+async function findIssueRowById(issueId: number): Promise<Issue> {
   const result = await dbQuery(
     `SELECT id, title, description, type, status, reporter_id, created_at, updated_at
      FROM issues
@@ -173,14 +160,14 @@ async function findIssueRowById(issueId: number): Promise<IssueRow> {
     throw new NotFoundError("Issue not found");
   }
 
-  return issue as IssueRow;
+  return issue as Issue;
 }
 
 export async function updateIssue(
   issueId: number,
   body: unknown,
   user: JwtPayload
-) {
+): Promise<Issue> {
   if (!body || typeof body !== "object") {
     throw new BadRequestError("Invalid request body");
   }
@@ -249,10 +236,10 @@ export async function updateIssue(
     values
   );
 
-  return result.rows[0];
+  return result.rows[0] as Issue;
 }
 
-export async function deleteIssue(issueId: number, user: JwtPayload) {
+export async function deleteIssue(issueId: number, user: JwtPayload): Promise<void> {
   if (user.role !== "maintainer") {
     throw new ForbiddenError("Only maintainers can delete issues");
   }

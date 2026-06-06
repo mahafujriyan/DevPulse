@@ -4,7 +4,7 @@
   "description": "DevPulse API — issue tracker with PostgreSQL (Supabase/Neon), Express, and JWT auth",
   "main": "index.js",
   "engines": {
-    "node": "22.x"
+    "node": "24.x"
   },
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/local-server.ts",
