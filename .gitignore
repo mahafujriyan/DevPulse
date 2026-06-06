@@ -9,7 +9,6 @@ dist
 api/handler.cjs
 api/ncc-bundle/
 api/index.js
-index.js
 
 # logs
 *.log
