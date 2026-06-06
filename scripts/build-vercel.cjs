@@ -18,4 +18,14 @@ if (!fs.existsSync(bundleFile)) {
   process.exit(1);
 }
 
-console.log("api/ncc-bundle/index.js built successfully (Express bundled via ncc)");
+// Root index.js satisfies Vercel Express zero-config entrypoint scan (no listen).
+const rootIndex = `'use strict';
+const appModule = require("./api/ncc-bundle/index.js");
+const app = appModule.default || appModule;
+module.exports = app;
+module.exports.config = { maxDuration: 30 };
+`;
+
+fs.writeFileSync(path.join(root, "index.js"), rootIndex, "utf8");
+
+console.log("Vercel build OK: api/ncc-bundle/index.js + root index.js");
