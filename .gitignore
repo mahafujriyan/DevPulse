@@ -8,7 +8,7 @@ node_modules
 dist
 api/handler.cjs
 api/ncc-bundle/
-api/index.js
+
 
 # logs
 *.log
