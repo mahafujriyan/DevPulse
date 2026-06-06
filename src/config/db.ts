@@ -3,17 +3,13 @@ import { env } from "./env";
 
 let pool: Pool | null = null;
 
-/** Neon pooled URLs: strip channel_binding (unsupported by node-pg), enforce sslmode. */
+/** Hosted Postgres URLs: strip params that conflict with Pool.ssl (Supabase/Neon). */
 function normalizeDatabaseUrl(url: string): string {
   let normalized = url.trim();
 
   normalized = normalized.replace(/&?channel_binding=require/gi, "");
+  normalized = normalized.replace(/[&?]sslmode=[^&]*/gi, "");
   normalized = normalized.replace(/\?&/, "?").replace(/[?&]$/, "");
-
-  if (!/sslmode=/i.test(normalized) && env.requiresSsl) {
-    const separator = normalized.includes("?") ? "&" : "?";
-    normalized = `${normalized}${separator}sslmode=require`;
-  }
 
   if (!/connect_timeout=/i.test(normalized)) {
     const separator = normalized.includes("?") ? "&" : "?";

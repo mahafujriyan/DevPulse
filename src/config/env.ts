@@ -23,9 +23,21 @@ function databaseUrlValue(): string {
   return process.env.DATABASE_URL || "";
 }
 
-/** Neon hosted Postgres (*.neon.tech) requires SSL connections. */
-function isNeonDatabaseUrl(url: string): boolean {
-  return /\.neon\.tech/i.test(url);
+export type DbProvider = "neon" | "supabase" | "other";
+
+function getDbProvider(url: string): DbProvider {
+  if (/\.neon\.tech/i.test(url)) {
+    return "neon";
+  }
+  if (/\.supabase\.(com|co)/i.test(url)) {
+    return "supabase";
+  }
+  return "other";
+}
+
+/** Neon and Supabase require SSL connections. */
+function requiresSslConnection(url: string): boolean {
+  return /\.neon\.tech|\.supabase\.(com|co)/i.test(url);
 }
 
 export const env = {
@@ -42,10 +54,14 @@ export const env = {
   },
   jwtExpiresIn: process.env.JWT_EXPIRES_IN?.trim() || "7d",
   get requiresSsl(): boolean {
-    return isNeonDatabaseUrl(databaseUrlValue());
+    return requiresSslConnection(databaseUrlValue());
   },
+  get dbProvider(): DbProvider {
+    return getDbProvider(databaseUrlValue());
+  },
+  /** @deprecated Use dbProvider === "neon" */
   get isNeon(): boolean {
-    return isNeonDatabaseUrl(databaseUrlValue());
+    return getDbProvider(databaseUrlValue()) === "neon";
   },
   get isVercel(): boolean {
     return Boolean(process.env.VERCEL);

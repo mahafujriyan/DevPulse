@@ -1,18 +1,20 @@
 const REQUIRED_VARS = ["DATABASE_URL", "JWT_SECRET"] as const;
 
-/** Strip channel_binding and fix Neon URL before the app uses DATABASE_URL. */
-export function normalizeNeonDatabaseUrl(url: string): string {
+/** Strip channel_binding (unsupported by node-pg) and ensure sslmode for hosted Postgres. */
+export function normalizeDatabaseUrl(url: string): string {
   let normalized = url.trim();
 
   normalized = normalized.replace(/&?channel_binding=require/gi, "");
   normalized = normalized.replace(/\?&/, "?").replace(/[?&]$/, "");
 
-  if (!/sslmode=/i.test(normalized) && /\.neon\.tech/i.test(normalized)) {
-    const separator = normalized.includes("?") ? "&" : "?";
-    normalized = `${normalized}${separator}sslmode=require`;
-  }
-
   return normalized;
+}
+
+/** @deprecated Use normalizeDatabaseUrl */
+export const normalizeNeonDatabaseUrl = normalizeDatabaseUrl;
+
+function usesConnectionPooler(url: string): boolean {
+  return url.includes("-pooler") || /pooler\.supabase\.com/i.test(url);
 }
 
 function applyNormalizedDatabaseUrl(): void {
@@ -21,7 +23,7 @@ function applyNormalizedDatabaseUrl(): void {
     return;
   }
 
-  process.env.DATABASE_URL = normalizeNeonDatabaseUrl(raw);
+  process.env.DATABASE_URL = normalizeDatabaseUrl(raw);
 }
 
 /** Default production mode on Vercel when NODE_ENV is unset. */
@@ -67,16 +69,22 @@ export function validateEnvironment(): void {
   const dbUrl = process.env.DATABASE_URL!.trim();
   const jwtSecret = process.env.JWT_SECRET!.trim();
 
-  if (!/\.neon\.tech/i.test(dbUrl)) {
+  if (!/^postgres(ql)?:\/\//i.test(dbUrl)) {
     throw new Error(
-      "DATABASE_URL must be a Neon connection string (*.neon.tech). " +
-        "Get it from Neon Dashboard → Connect → pooled URI."
+      "DATABASE_URL must be a PostgreSQL connection string (postgresql://...)."
     );
   }
 
-  if (!dbUrl.includes("-pooler")) {
+  if (!/\.neon\.tech|\.supabase\.(com|co)/i.test(dbUrl)) {
     console.warn(
-      "[env] Warning: DATABASE_URL has no -pooler host. For Vercel, enable Connection pooling in Neon."
+      "[env] Warning: DATABASE_URL host is not Neon or Supabase — ensure SSL and pooling are configured."
+    );
+  }
+
+  if (!usesConnectionPooler(dbUrl)) {
+    console.warn(
+      "[env] Warning: use a pooled connection string on Vercel " +
+        "(Neon: -pooler host, Supabase: pooler.supabase.com)."
     );
   }
 

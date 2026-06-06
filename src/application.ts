@@ -41,7 +41,7 @@ app.get(
         data: {
           database: "connected",
           environment: env.nodeEnv,
-          neon: env.isNeon,
+          provider: env.dbProvider,
         },
       });
     } catch (error) {
