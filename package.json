@@ -2,15 +2,15 @@
   "name": "devpulse",
   "version": "1.0.0",
   "description": "DevPulse API — issue tracker with Neon PostgreSQL, Express, and JWT auth",
-  "main": "dist/server.js",
+  "main": "dist/local-server.js",
   "engines": {
     "node": "22.x"
   },
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "dev": "ts-node-dev --respawn --transpile-only src/local-server.ts",
     "build": "node ./node_modules/typescript/lib/tsc.js --project tsconfig.json --pretty false && node -e \"console.log('Build completed successfully -> dist/')\"",
-    "vercel-build": "node ./node_modules/typescript/lib/tsc.js --project tsconfig.json --pretty false && node -e \"const fs=require('fs'); if(!fs.existsSync('dist/app.js')){console.error('Build failed: dist/app.js missing');process.exit(1)} console.log('dist/app.js OK')\"",
-    "start": "node dist/server.js",
+    "vercel-build": "node scripts/build-vercel.cjs",
+    "start": "node dist/local-server.js",
     "db:migrate": "ts-node --transpile-only src/database/migrate.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -36,6 +36,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.9.1",
     "@types/pg": "^8.20.0",
+    "esbuild": "^0.28.0",
     "ts-node-dev": "^2.0.0"
   }
 }
