@@ -38,7 +38,7 @@
 1. Vercel → **Settings → Environment Variables** — set `DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `NODE_ENV=production`
 2. Use Neon pooled URL with `?sslmode=require` only (no `channel_binding`)
 3. **Deployments → latest → Logs** — check the real error (missing env, bcrypt, DB)
-4. Express entry is `api/index.js` → esbuild bundle `api/handler.cjs` (not `src/app.ts` — Vercel auto-detects that name)
+4. Express entry is `api/index.js` → `@vercel/ncc` bundle `api/ncc-bundle/index.js` (not `src/app.ts`)
 
 ---
 

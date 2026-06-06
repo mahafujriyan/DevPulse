@@ -1,23 +1,21 @@
-const esbuild = require("esbuild");
+const { execSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 
-const outfile = path.join(__dirname, "../api/handler.cjs");
+const root = path.join(__dirname, "..");
+const bundleDir = path.join(root, "api/ncc-bundle");
+const bundleFile = path.join(bundleDir, "index.js");
 
-esbuild.buildSync({
-  entryPoints: [path.join(__dirname, "../src/application.ts")],
-  bundle: true,
-  platform: "node",
-  target: "node22",
-  format: "cjs",
-  outfile,
-  external: ["bcrypt", "pg", "pg-native", "cpu-features"],
-  logLevel: "info",
-});
+console.log("Building Vercel bundle with @vercel/ncc...");
 
-if (!fs.existsSync(outfile)) {
-  console.error("Vercel build failed: api/handler.cjs was not created");
+execSync(
+  "npx ncc build src/application.ts -o api/ncc-bundle -e bcrypt -e pg -e pg-native",
+  { stdio: "inherit", cwd: root, env: process.env }
+);
+
+if (!fs.existsSync(bundleFile)) {
+  console.error("Vercel build failed: api/ncc-bundle/index.js was not created");
   process.exit(1);
 }
 
-console.log("api/handler.cjs built successfully (Express bundled)");
+console.log("api/ncc-bundle/index.js built successfully (Express bundled via ncc)");

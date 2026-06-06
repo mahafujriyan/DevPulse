@@ -1,8 +1,8 @@
 /**
- * Vercel serverless entry — uses esbuild bundle (Express inlined, no ./router trace bug).
+ * Vercel serverless entry — loads @vercel/ncc bundle (Express fully inlined).
  * Do NOT call app.listen() here.
  */
-const appModule = require("./handler.cjs");
+const appModule = require("./ncc-bundle/index.js");
 const app = appModule.default || appModule;
 
 module.exports = app;
