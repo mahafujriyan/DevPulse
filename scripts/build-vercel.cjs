@@ -3,29 +3,30 @@ const fs = require("fs");
 const path = require("path");
 
 const root = path.join(__dirname, "..");
-const bundleDir = path.join(root, "api/ncc-bundle");
-const bundleFile = path.join(bundleDir, "index.js");
+const nccOut = path.join(root, "api/ncc-bundle/index.js");
+const apiEntry = path.join(root, "api/index.js");
 
-console.log("Building Vercel bundle with @vercel/ncc...");
+console.log("Step 1/2: Bundle with @vercel/ncc...");
 
 execSync(
   "npx ncc build src/application.ts -o api/ncc-bundle -e bcrypt -e pg -e pg-native",
   { stdio: "inherit", cwd: root, env: process.env }
 );
 
-if (!fs.existsSync(bundleFile)) {
-  console.error("Vercel build failed: api/ncc-bundle/index.js was not created");
+if (!fs.existsSync(nccOut)) {
+  console.error("Build failed: api/ncc-bundle/index.js missing");
   process.exit(1);
 }
 
-// Root index.js satisfies Vercel Express zero-config entrypoint scan (no listen).
-const rootIndex = `'use strict';
-const appModule = require("./api/ncc-bundle/index.js");
-const app = appModule.default || appModule;
-module.exports = app;
-module.exports.config = { maxDuration: 30 };
-`;
+console.log("Step 2/2: Write single api/index.js (no secondary files for Vercel to trace)...");
 
-fs.writeFileSync(path.join(root, "index.js"), rootIndex, "utf8");
+const bundle = fs.readFileSync(nccOut, "utf8");
+const output =
+  bundle +
+  "\n// Vercel serverless config\n" +
+  "module.exports.config = { maxDuration: 30 };\n";
 
-console.log("Vercel build OK: api/ncc-bundle/index.js + root index.js");
+fs.writeFileSync(apiEntry, output, "utf8");
+
+const sizeKb = Math.round(fs.statSync(apiEntry).size / 1024);
+console.log(`api/index.js written (${sizeKb} KB) — Express fully inlined`);
