@@ -2,7 +2,7 @@
   "name": "devpulse",
   "version": "1.0.0",
   "description": "DevPulse API — issue tracker with Neon PostgreSQL, Express, and JWT auth",
-  "main": "index.js",
+  "main": "dist/local-server.js",
   "engines": {
     "node": "22.x"
   },
